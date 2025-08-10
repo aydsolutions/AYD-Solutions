@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <!-- Metadata and TailwindCSS -->
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Instant Quote | AYD Home Solutions</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+
+  <!-- Custom Styles for Animation, Dropdowns, Visibility, and Background -->
+  <style>
+    /* Fade-in Animation */
+    @keyframes fade-in-slow {
+      from { opacity: 0; transform: scale(0.95); }
+      to { opacity: 1; transform: scale(1); }
+    }
+    .animate-fade-in-slow { animation: fade-in-slow 0.4s ease-out; }
+
+    /* Dropdown Wrapper Styling */
+    .dropdown-wrapper { position: relative; }
+    .dropdown-button {
+      width: 100%; padding: 0.5rem 1rem;
+      border: 1px solid #d1d5db; border-radius: 0.5rem;
+      background-color: white; cursor: pointer;
+    }
+    .dropdown-content {
+      position: absolute; bottom: 100%; left: 0;
+      width: 100%; background: white;
+      border: 1px solid #d1d5db; border-radius: 0.5rem;
+      padding: 0.5rem; box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+      z-index: 10; display: none; max-height: 500px; overflow-y: auto;
+    }
+    .dropdown-wrapper.open .dropdown-content { display: block; }
+
+    /* Control visibility of sections */
+    .hidden-until-zip, .hidden-until-service, .conditional-section { display: none; }
+
+    /* Background image (customize to match landing page theme) */
+    body {
+      background-image: url('https://images.unsplash.com/photo-1616004663984-e7f62db58875?auto=format&fit=crop&w=1600&q=80');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+    }
+  </style>
+</head>
+<body class="min-h-screen flex justify-center items-center px-4" onclick="closeDropdownIfOutside(event)">
+  <main class="flex justify-center items-center w-full h-full">
+    <!-- Main Quote Form Card -->
+    <div class="bg-white bg-opacity-95 rounded-2xl shadow-xl p-10 max-w-xl w-full border border-blue-200">
+      <h2 class="text-3xl font-bold text-center text-blue-800 mb-8">Instant Quote</h2>
+      <div class="space-y-6">
+
+        <!-- ZIP Code Input (Required First Input) -->
+        <div class="space-y-2">
+          <label for="zipcode" class="block text-sm font-medium text-gray-700">ZIP Code</label>
+          <input id="zipcode" type="text" maxlength="5" class="w-full px-4 py-2 border border-gray-300 rounded-lg" placeholder="e.g. 53901" oninput="showServiceDropdown()" />
+        </div>
+
+        <!-- Service Dropdown (Visible after valid ZIP entry) -->
+        <div id="service-wrapper" class="hidden-until-zip space-y-2">
+          <label for="service" class="block text-sm font-medium text-gray-700">Select a Service</label>
+          <select id="service" class="w-full px-4 py-2 border border-gray-300 rounded-lg" onchange="toggleServiceOptions()">
+            <option value="">-- Select a Service --</option>
+            <option value="cleaning">Standard Cleaning</option>
+            <option value="move_in_out">Move In/Out Cleaning</option>
+            <option value="landscaping">Landscaping</option>
+            <option value="gutter_cleaning">Gutter Cleaning</option>
+            <option value="window_cleaning">Exterior Window Cleaning</option>
+            <option value="handyman">Handyman Services</option>
+          </select>
+        </div>
+
+        <!-- General Options (like hours) visible after service is chosen -->
+        <div id="common-options" class="hidden-until-service space-y-2">
+          <label for="hours" class="block text-sm font-medium text-gray-700">Hours Requested</label>
+          <input id="hours" type="number" step="0.25" min="0.5" class="w-full px-4 py-2 border border-gray-300 rounded-lg" placeholder="e.g. 2" />
+        </div>
+
+        <!-- Cleaning Only Options -->
+        <div id="cleaning-options" class="conditional-section space-y-4">
+          <div class="space-y-2">
+            <label for="bedrooms" class="block text-sm font-medium text-gray-700">Number of Bedrooms</label>
+            <select id="bedrooms" class="w-full px-4 py-2 border border-gray-300 rounded-lg">
+              <option value="0">Studio</option>
+              <option value="1">1</option>
+              <option value="2">2</option>
+              <option value="3">3</option>
+              <option value="4">4+</option>
+            </select>
+          </div>
+          <div class="space-y-2">
+            <label for="bathrooms" class="block text-sm font-medium text-gray-700">Number of Bathrooms</label>
+            <select id="bathrooms" class="w-full px-4 py-2 border border-gray-300 rounded-lg">
+              <option value="1">1</option>
+              <option value="2">2</option>
+              <option value="3">3</option>
+              <option value="4">4+</option>
+            </select>
+          </div>
+
+          <!-- Add-On Dropdown Menu -->
+          <div class="dropdown-wrapper space-y-2" id="addonDropdown">
+            <label class="block text-sm font-medium text-gray-700">Add-On Services</label>
+            <div class="dropdown-button" onclick="toggleAddonsDropdown(event)" id="addonLabel">Select Add-Ons</div>
+            <div class="dropdown-content">
+              <div class="flex justify-between items-center mb-2">
+                <span class="text-sm font-semibold">Select Add-Ons</span>
+                <button onclick="event.stopPropagation(); toggleAddonsDropdown(event);" class="text-xs text-blue-500 hover:underline">Close</button>
+              </div>
+              <!-- Add-On Options With Short Label Format -->
+              <label class="block"><input type="checkbox" class="addon-checkbox mr-2" value="fridge" data-label="Fridge+$10"> Clean Inside Fridge (+$10)</label>
+              <label class="block"><input type="checkbox" class="addon-checkbox mr-2" value="oven" data-label="Oven+$15"> Clean Inside Oven (+$15)</label>
+              <label class="block"><input type="checkbox" class="addon-checkbox mr-2" value="windows" data-label="Windows+$15"> Interior Windows (+$15)</label>
+              <label class="block"><input type="checkbox" class="addon-checkbox mr-2" value="baseboards" data-label="Baseboards+$18"> Baseboards (+$18)</label>
+              <label class="block"><input type="checkbox" class="addon-checkbox mr-2" value="laundry" data-label="Laundry+$15"> Fold Laundry (+$15)</label>
+              <label class="block"><input type="checkbox" class="addon-checkbox mr-2" value="pet_hair" data-label="PetHair+$22"> Pet Hair Removal (+$22)</label>
+              <label class="block"><input type="checkbox" class="addon-checkbox mr-2" value="blinds" data-label="Blinds+$15"> Blind Dusting (+$15)</label>
+              <label class="block"><input type="checkbox" class="addon-checkbox mr-2" value="carpet" data-label="Carpet+$30"> Carpet Cleaning (+$30)</label>
+              <label class="block"><input type="checkbox" class="addon-checkbox mr-2" value="dishes" data-label="Dishes+$10"> Dish Washing (+$10)</label>
+              <label class="block"><input type="checkbox" class="addon-checkbox mr-2" value="exterior_windows" data-label="ExtWindows+$20"> Exterior Window Cleaning (+$20)</label>
+              <label class="block"><input type="checkbox" class="addon-checkbox mr-2" value="handyman_misc" data-label="Handyman+$25"> Small Handyman Tasks (+$25)</label>
+              <label class="block"><input type="checkbox" class="addon-checkbox mr-2" value="tv_mount" data-label="TVMount+$50"> Mount TV (+$50)</label>
+              <label class="block"><input type="checkbox" class="addon-checkbox mr-2" value="furniture_assembly" data-label="Furniture+$40"> Furniture Assembly (+$40)</label>
+            </div>
+          </div>
+        </div>
+
+        <!-- Button to Submit Quote -->
+        <button onclick="calculateQuote()" class="w-full bg-blue-700 hover:bg-blue-800 text-white py-3 rounded-lg font-semibold transition">Calculate Estimate</button>
+      </div>
+    </div>
+  </main>
+
+  <!-- Main Quote Script Logic -->
+  <script>
+    // Show service selector after valid ZIP entered
+    function showServiceDropdown() {
+      const zip = document.getElementById('zipcode').value.trim();
+      const serviceWrapper = document.getElementById('service-wrapper');
+      if (zip.length === 5 && /^\d+$/.test(zip)) {
+        serviceWrapper.classList.remove('hidden-until-zip');
+      } else {
+        serviceWrapper.classList.add('hidden-until-zip');
+      }
+    }
+
+    // Display service-specific options after service selected
+    function toggleServiceOptions() {
+      const service = document.getElementById('service').value;
+      const commonOptions = document.getElementById('common-options');
+      const cleaningOptions = document.getElementById('cleaning-options');
+      if (service) {
+        commonOptions.classList.remove('hidden-until-service');
+        if (["cleaning", "move_in_out"].includes(service)) {
+          cleaningOptions.classList.remove('conditional-section');
+        } else {
+          cleaningOptions.classList.add('conditional-section');
+        }
+      } else {
+        commonOptions.classList.add('hidden-until-service');
+        cleaningOptions.classList.add('conditional-section');
+      }
+    }
+
+    // Toggle Add-On Dropdown
+    function toggleAddonsDropdown(event) {
+      const wrapper = document.getElementById('addonDropdown');
+      wrapper.classList.toggle('open');
+      event.stopPropagation();
+    }
+
+    // Close dropdown when clicking outside
+    function closeDropdownIfOutside(event) {
+      const wrapper = document.getElementById('addonDropdown');
+      if (!wrapper.contains(event.target)) {
+        wrapper.classList.remove('open');
+      }
+    }
+  </script>
+
+<script>
+function calculateQuote() {
+  const hours = parseFloat(document.getElementById('hours').value) || 0;
+  let baseRate = 40; // base $ per hour
+  let total = hours * baseRate;
+  document.querySelectorAll('.addon-checkbox:checked').forEach(cb => {
+    const priceMatch = cb.dataset.label.match(/\+(\d+)/);
+    if (priceMatch) total += parseFloat(priceMatch[1]);
+  });
+  alert("Estimated Total: $" + total.toFixed(2));
+  // Redirect to booking page after showing quote
+  window.location.href = 'booking.html';
+}
+</script>
+</body>
+</html>
